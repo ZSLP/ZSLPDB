@@ -12,7 +12,7 @@ import * as zmq from 'zeromq';
 import { Info } from "./info";
 import * as pQueue from 'p-queue';
 
-const Block = require('bcash/lib/primitives/block');
+const Block = require('bitcore-lib-cash/lib/block/block');
 const BufferReader = require('bufio/lib/reader');
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -256,11 +256,11 @@ export class SlpGraphManager {
     async searchBlockForBurnedSlpTxos(block_hash: string) {
         console.log('[INFO] Starting to look for any burned tokens resulting from non-SLP transactions');
         let blockHex = <string>await RpcClient.getRawBlock(block_hash);
-        let block = Block.fromReader(new BufferReader(Buffer.from(blockHex, 'hex')));
+        let block = Block.fromString(blockHex);
         let graphPromises: Promise<void>[] = [];
         console.time("BlockSearchForBurn-"+block_hash);
-        for(let i=1; i < block.txs.length; i++) { // skip coinbase with i=1
-            let txnbuf: Buffer = block.txs[i].toRaw();
+        for(let i=1; i < block.transactions.length; i++) { // skip coinbase with i=1
+            let txnbuf: Buffer = block.transactions[i].serialize();
             let txn: Primatives.Transaction = Primatives.Transaction.parseFromBuffer(txnbuf);
             let inputs: Primatives.TransactionInput[] = txn.inputs;
             for(let j=0; j < inputs.length; j++) {

@@ -92,7 +92,8 @@ export class Config {
 		slp_mempool_ignore_length: Number.parseInt(process.env.core_slp_mempool_ignore_length ? process.env.core_slp_mempool_ignore_length : "1000000"),
 	}
 	static telemetry = {
-		host: process.env.telemetry_host ? process.env.telemetry_host : 'status.slpdb.io',
+		enable: process.env.telemetry_enable ? ['1', 'true'].includes(process.env.telemetry_enable) : false,
+		host: process.env.telemetry_host ? process.env.telemetry_host : 'status.zslp.org',
 		port: process.env.telemetry_port ? process.env.telemetry_port : 443,
 		advertised_host: process.env.telemetry_advertised_host ? process.env.telemetry_advertised_host : '',
 		secret: process.env.telemetry_secret ? process.env.telemetry_secret : ''

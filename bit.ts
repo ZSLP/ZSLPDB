@@ -19,7 +19,7 @@ import { SlpdbStatus } from './status';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const Block = require('bcash/lib/primitives/block');
+const Block = require('bitcore-lib-cash/lib/block/block');
 const BufferReader = require('bufio/lib/reader');
 
 const bitbox = new BITBOX();
@@ -82,7 +82,7 @@ export class Bit {
 
     private async waitForFullNodeSync() {
         let bitbox = this.network === 'mainnet' ? new BITBOX({ restURL: `https://rest.bitcoin.com/v2/` }) : new BITBOX({ restURL: `https://trest.bitcoin.com/v2/` });
-        let isSyncd = false;
+        let isSyncd = true;
         let lastReportedSyncBlocks = 0;
         while (!isSyncd) {
             let syncdBlocks = (await RpcClient.getBlockchainInfo()).blocks;
@@ -216,16 +216,16 @@ export class Bit {
             const self = this;
 
             let blockHex = <string>await RpcClient.getRawBlock(block_content.hash);
-            let block = Block.fromReader(new BufferReader(Buffer.from(blockHex, 'hex')));
-            for(let i=1; i < block.txs.length; i++) { // skip coinbase with i=1
-                let txnhex = block.txs[i].toRaw().toString('hex');
+            let block = Block.fromString(blockHex);
+            for(let i=1; i < block.transactions.length; i++) { // skip coinbase with i=1
+                let txnhex = block.transactions[i].serialize(true);
 
-                if(this.slpTransactionFilter(txnhex) && !this.slpMempool.has(block.txs[i].txid())) {
+                if(this.slpTransactionFilter(txnhex) && !this.slpMempool.has(block.transactions[i].id)) {
                     // This is used when SLP transactions are broadcasted for first time with a block 
                     if(triggerSlpProcessing) {
-                        console.log("SLP transaction not in mempool:", block.txs[i].txid());
-                        await this.handleMempoolTransaction(block.txs[i].txid(), txnhex);
-                        let syncResult = await Bit.sync(this, 'mempool', block.txs[i].txid());
+                        console.log("ZSLP transaction not in mempool:", block.transactions[i].id);
+                        await this.handleMempoolTransaction(block.transactions[i].id, txnhex);
+                        let syncResult = await Bit.sync(this, 'mempool', block.transactions[i].id);
                         this._slpGraphManager.onTransactionHash!(syncResult!);
                     }
                     // This is used during startup block sync
@@ -249,10 +249,10 @@ export class Bit {
                     }
                 }
 
-                if(this.slpMempool.has(block.txs[i].txid())) {
-                    console.log("[INFO] Mempool has txid", block.txs[i].txid());
+                if(this.slpMempool.has(block.transactions[i].id)) {
+                    console.log("[INFO] Mempool has txid", block.transactions[i].id);
                     tasks.push(limit(async function() {
-                        let t: TNATxn|null = await self.db.unconfirmedFetch(block.txs[i].txid());
+                        let t: TNATxn|null = await self.db.unconfirmedFetch(block.transactions[i].id);
                         if(!t) {
                             let txn: bitcore.Transaction = new bitcore.Transaction(txnhex);
                             t = await self.tna.fromTx(txn, { network: self.network });
@@ -262,13 +262,13 @@ export class Bit {
                             i: block_index,
                             t: block_time
                         };
-                        result.set(block.txs[i].txid(), { txHex: txnhex, tnaTxn: t });
+                        result.set(block.transactions[i].id, { txHex: txnhex, tnaTxn: t });
                         return t;
                     }));
                 }
             }
             let btxs = (await Promise.all(tasks)).filter(i => i);
-            console.log('[INFO] Block', block_index, 'processed :', block.txs.length, 'BCH txs |', btxs.length, 'SLP txs');
+            console.log('[INFO] Block', block_index, 'processed :', block.transactions.length, 'ZCL txs |', btxs.length, 'ZSLP txs');
             return result;
         } else {
             return null;

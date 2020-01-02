@@ -788,7 +788,7 @@ export class SlpTokenGraph implements TokenGraph {
                 else {
                     console.log("[INFO] Making sure thransaction is in BCH mempool.");
                     let mempool = await RpcClient.getRawMemPool();
-                    if(mempool.includes) {
+                    if(mempool.includes(key)) {
                         continue;
                     }
                     throw Error(`Unknown error occured in setting blockhash for ${key})`);
@@ -1099,7 +1099,7 @@ export class SlpTokenGraph implements TokenGraph {
         // Map _txnGraph
         dag.forEach((item, idx) => {
             dag[idx].graphTxn.outputs.map(o => {
-                if(o.address && o.address.includes("slptest")) {
+                if(o.address && o.address.includes("zslp")) {
                     let decoded = cashaddr.decode(o.address);
                     o.address = Utils.slpAddressFromHash160(decoded.hash, tg._network);
                 }
