@@ -260,7 +260,7 @@ export class SlpGraphManager {
         let graphPromises: Promise<void>[] = [];
         console.time("BlockSearchForBurn-"+block_hash);
         for(let i=1; i < block.transactions.length; i++) { // skip coinbase with i=1
-            let txnbuf: Buffer = block.transactions[i].serialize();
+            let txnbuf: Buffer = block.transactions[i].serialize(true);
             let txn: Primatives.Transaction = Primatives.Transaction.parseFromBuffer(txnbuf);
             let inputs: Primatives.TransactionInput[] = txn.inputs;
             for(let j=0; j < inputs.length; j++) {
