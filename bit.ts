@@ -81,7 +81,7 @@ export class Bit {
     }
 
     private async waitForFullNodeSync() {
-        let bitbox = this.network === 'mainnet' ? new BITBOX({ restURL: `https://rest.bitcoin.com/v2/` }) : new BITBOX({ restURL: `https://trest.bitcoin.com/v2/` });
+        let bitbox = this.network === 'mainnet' ? new BITBOX({ restURL: `https://rest.zslp.org/v2/` }) : new BITBOX({ restURL: `https://trest.zslp.org/v2/` });
         let isSyncd = true;
         let lastReportedSyncBlocks = 0;
         while (!isSyncd) {
